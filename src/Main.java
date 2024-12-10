@@ -97,7 +97,7 @@ public class Main {
                     admin.createAccount(role);
                     break;
     
-                    case 2:
+                case 2:
                     // Loop for editing employee information
                     while (true) {
                         System.out.print("Enter User ID to edit: ");
@@ -196,16 +196,7 @@ public class Main {
                     break;
     
                 case 4:
-                    System.out.print("Enter your current password: ");
-                    String currentPassword = scanner.nextLine();
-                    System.out.print("Enter your new password: ");
-                    String newPass = scanner.nextLine();
-                    if (admin.login(admin.username, currentPassword)) {
-                        admin.changePassword(newPass);
-                        System.out.println("Password changed successfully.");
-                    } else {
-                        System.out.println("Incorrect current password. Password change failed.");
-                    }
+                    changeYourPassword(admin);
                     break;
     
                 case 5:
@@ -246,6 +237,95 @@ public class Main {
         }
     }
     
+    public static void showCashierMenu(Cashier cashier) {
+        Inventory inventory = new Inventory();
+        List<Product> cart = new ArrayList<>();
+    
+        while (true) {
+            System.out.println("\n--- Cashier Menu ---");
+            System.out.println("1. Scan Products");
+            System.err.println("2. Process Payment");
+            System.out.println("3. Clear cart");
+            System.out.println("4. Personal Information");
+            System.out.println("5. Logout");
+            int choice = getUserChoice();
+    
+            switch (choice) {
+                case 1:
+                    // Continuous scanning of products
+                    System.out.println("Start scanning products. Type 'done' when finished.");
+                    cashier.scanProducts(cart, inventory);
+                    break;
+    
+                case 2:
+            
+                    // Calculate total amount
+                    if (cart.isEmpty()) {
+                        System.out.println("No products in the cart. Please scan products first.");
+                        break;
+                    }
+    
+                    double totalAmount = cart.stream()
+                                             .mapToDouble(p -> p.getPrice() * p.getStock())
+                                             .sum();
+                    System.out.println("Total Amount: $" + totalAmount);
+    
+                    // Process payment
+                    System.out.print("Enter Payment Method (cash/credit/debit/digital wallet): ");
+                    String paymentMethod = scanner.nextLine();
+                    if (cashier.processPayment(paymentMethod, totalAmount)) {
+                        // Update inventory and generate bill
+                        cart.forEach(product -> inventory.updateInventory(product.getProductId(), - product.getStock()));
+                        new Bill("BILL-" + System.currentTimeMillis(), cashier.id, cart).generateBill();
+                        cart.clear(); // Clear cart after successful checkout
+                    } else {
+                        System.out.println("Payment failed. Returning to menu and clear cart");
+                        cart.clear();
+                    }
+                    break;
+    
+                case 3: 
+                    cart.clear();
+                    System.out.println("The cart have been clear.");
+
+                case 4:
+                    showPersonalInfoMenu(cashier);
+                    break;
+                
+                case 5:
+                    // Logout
+                    System.out.println("Logging out...");
+                    return;
+    
+                default:
+                    // Invalid choice handling
+                    System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+    
+    private static int getUserChoice() {
+        System.out.print("Enter your choice: ");
+        try {
+            return Integer.parseInt(scanner.nextLine());
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    private static void changeYourPassword(Account account){
+        System.out.print("Enter your current password: ");
+        String currentPassword = scanner.nextLine();
+        System.out.print("Enter your new password: ");
+        String newPass = scanner.nextLine();
+        if (account.login(account.username, currentPassword)) {
+            account.changePassword(newPass);
+            System.out.println("Password changed successfully.");
+        } else {
+            System.out.println("Incorrect current password. Password change failed.");
+            }
+    }
+
     private static void showInventoryMenu(Manager manager) {
         Inventory inventory = new Inventory();
         while (true) {
@@ -325,115 +405,35 @@ public class Main {
         }
     }
 
-    private static void showPersonalInfoMenu(Manager manager) {
+    private static void showPersonalInfoMenu(Employee employee) {
         while (true) {
             System.out.println("\n--- Personal Information Menu ---");
             System.out.println("1. View Personal Information");
             System.out.println("2. Update Personal Information");
-            System.out.println("3. Back to Main Menu");
+            System.out.println("3. Change Your Password");
+            System.out.println("4. Back to Main Menu");
     
             int choice = getUserChoice();
             switch (choice) {
                 case 1:
-                    manager.viewPersonalInformation();
+                    employee.viewPersonalInformation();
                     break;
                 case 2:
                     System.out.print("Enter new name: ");
                     String newName = scanner.nextLine();
                     System.out.print("Enter new phone number: ");
                     String newPhone = scanner.nextLine();
-                    manager.editPersonalInformation(newName, newPhone);
+                    employee.editPersonalInformation(newName, newPhone);
                     System.out.println("Personal information updated successfully.");
                     break;
                 case 3:
+                    changeYourPassword(employee);
+                case 4:
                     return;
                 default:
                     System.out.println("Invalid choice. Try again.");
             }
         }
     }                
-    
-    public static void showCashierMenu(Cashier cashier) {
-        Inventory inventory = new Inventory();
-        List<Product> cart = new ArrayList<>();
-    
-        while (true) {
-            System.out.println("\n--- Cashier Menu ---");
-            System.out.println("1. Scan Products");
-            System.err.println("2. Process Payment");
-            System.out.println("3. View Personal Information");
-            System.out.println("4. Update Personal Information");
-            System.out.println("5. Logout");
-            int choice = getUserChoice();
-    
-            switch (choice) {
-                case 1:
-                    // Continuous scanning of products
-                    System.out.println("Start scanning products. Type 'done' when finished.");
-                    cashier.scanProducts(cart, inventory);
-                    break;
-    
-                case 2:
-            
-                    // Calculate total amount
-                    if (cart.isEmpty()) {
-                        System.out.println("No products in the cart. Please scan products first.");
-                        break;
-                    }
-    
-                    double totalAmount = cart.stream()
-                                             .mapToDouble(p -> p.getPrice() * p.getStock())
-                                             .sum();
-                    System.out.println("Total Amount: $" + totalAmount);
-    
-                    // Process payment
-                    System.out.print("Enter Payment Method (cash/credit/debit/digital wallet): ");
-                    String paymentMethod = scanner.nextLine();
-                    if (cashier.processPayment(paymentMethod, totalAmount)) {
-                        // Update inventory and generate bill
-                        cart.forEach(product -> inventory.updateInventory(product.getProductId(), product.getStock()));
-                        new Bill("BILL-" + System.currentTimeMillis(), cashier.id, cart).generateBill();
-                        cart.clear(); // Clear cart after successful checkout
-                    } else {
-                        System.out.println("Payment failed. Returning to menu and clear cart");
-                        cart.clear();
-                    }
-                    break;
-    
-
-                case 3:
-                cashier.viewPersonalInformation();
-                break;
-
-                case 4:
-                // Update personal information
-                System.out.print("Enter new name: ");
-                String newName = scanner.nextLine();
-                System.out.print("Enter new phone number: ");
-                String newPhone = scanner.nextLine();
-
-                cashier.editPersonalInformation(newName, newPhone);
-                System.out.println("Personal information updated successfully.");
-                break;
-                case 5:
-                    // Logout
-                    System.out.println("Logging out...");
-                    return;
-    
-                default:
-                    // Invalid choice handling
-                    System.out.println("Invalid choice. Try again.");
-            }
-        }
-    }
-    
-    private static int getUserChoice() {
-        System.out.print("Enter your choice: ");
-        try {
-            return Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            return -1;
-        }
-    }
 }
 

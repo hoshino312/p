@@ -30,7 +30,7 @@ public class Inventory {
     public void updateInventory(String productId, int quantity) {
         for (Product product : inventoryList) {
             if (product.getProductId().equals(productId)) {
-                product.setStock(product.getStock() - quantity);
+                product.setStock(product.getStock() + quantity);
                 saveInventory();
                 return;
             }

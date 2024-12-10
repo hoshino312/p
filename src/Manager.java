@@ -24,7 +24,7 @@ public class Manager extends Employee {
 
     public void replenishItem(String productId, int quantity) {
         Inventory inventory = new Inventory();
-        inventory.updateInventory(productId, - quantity);
+        inventory.updateInventory(productId, quantity);
         System.out.println("Product replenished successfully!");
     }
 
